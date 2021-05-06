@@ -43,7 +43,7 @@ class Card extends Image {
         this.#ID = name;
         this.upright = upright;
         this.classList.add("card")
-        this.src = `cardImg/${name}.svg`;
+        this.src = `art/${name}.svg`;
         this.#value = (v => {
             switch(v){
                 case "A":
