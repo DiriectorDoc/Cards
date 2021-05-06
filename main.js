@@ -17,7 +17,7 @@ class Pile extends Array {
             if(this.length == 1){
                 piles[this.#base = card.ID] = this
             }
-            card.inPile = this.#base
+            card.pileID = this.#base
         } else {
             console.error("Only objects of type Card can be added to Piles.")
         }
@@ -75,7 +75,7 @@ class Card extends Image {
                 oldY = this.offsetTop + this.height/2,
                 self = this,
                 $self = $(this),
-                pileID = this.inPile,
+                pileID = this.pileID,
                 pile = piles[pileID];
             e = e || window.event;
             e.preventDefault();
@@ -85,7 +85,7 @@ class Card extends Image {
                     let L = pile.length;
                     $(`.card[pile=${pileID}]`).each(function(i){
                         $(this).css({
-                            left: `calc(${(piles[pileID][L/2|0].offsetLeft - ((L+1)%2*7))*100 / $self.parent()[0].offsetWidth}% + ${7*(2*i + L%2 + (L + 1)%2 - L)}px)`, // [1]
+                            left: `calc(${(piles[pileID][L/2|0].offsetLeft - (L+1)%2*7)*100 / $self.parent()[0].offsetWidth}% + ${14*(i - (L-1)/2)}px)`, // [1]
                             top: self.offsetTop*100 / $self.parent()[0].offsetHeight + "%"
                         })
                     })
@@ -103,7 +103,7 @@ class Card extends Image {
                     let L = pile.length;
                     $(`.card[pile=${pileID}]`).each(function(i){
                         $(this).css({
-                            left: self.offsetLeft - oldX + e.clientX + 7*(2*i + L%2 + (L + 1)%2 - L), // [1]
+                            left: self.offsetLeft - oldX + e.clientX + 14*(i - (L-1)/2), // [1]
                             top: self.offsetTop - oldY + e.clientY
                         })
                     })
@@ -127,13 +127,17 @@ class Card extends Image {
         this.height = 3.5 * factor
     }
 
+    get upright(){
+        return this.width / 2.5
+    }
+
     /**
      * @param {string} ID
      */
-    set inPile(ID){
+    set pileID(ID){
         $(this).attr("pile", ID)
     }
-    get inPile(){
+    get pileID(){
         return $(this).attr("pile")
     }
 
@@ -170,8 +174,7 @@ $(function(){
 ---------Notes---------
 
 ------[1]------
-There's probably a more simble calculation for this. I needed the values to
-go like this:
+I needed the values to go like this:
 
 L1→           0
 L2→        -7   7
@@ -186,7 +189,7 @@ Where L is the length of the Pile class and I is the card index.
 (i0 starts at the leftmost value of each row)
 
 I ended up with this:
-func(i, L) = 7*(2*i + L%2 + (L + 1)%2 - L
+func(i, L) = 14*(i - (L-1)/2)
 {i|0 < i < L, i ϵ ℤ}
 
 I have considered alternatives, like setting the first offset to -7*i and
