@@ -1,22 +1,29 @@
 body {
     margin: 0;
     height: 100vh;
+    background: #056941 url(img/tablecloth.png) repeat;
 }
 
 .card {
     position: -webkit-sticky;
-    position: -moz-sticky;
-    position: -ms-sticky;
-    position: -o-sticky;
     position: sticky;
     cursor: move;
-    cursor: -moz-grab;
     cursor: -webkit-grab;
+    cursor: -moz-grab;
     cursor: grab;
+    margin-left: -80px;
+
+    &:first-of-type {
+        margin: 0;
+    }
+
+    &:hover {
+        z-index: 100;
+    }
 
     &:active {
-        cursor: grabbing;
-        cursor: -moz-grabbing;
         cursor: -webkit-grabbing;
+        cursor: -moz-grabbing;
+        cursor: grabbing;
     }
 }
