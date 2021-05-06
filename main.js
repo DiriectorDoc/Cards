@@ -1,4 +1,29 @@
-const piles = {};
+const storedPiles = {};
+
+class Deck extends Array {
+
+    constructor(){
+        super()
+        for(let s of ["S", "H", "C", "D"])
+            for(let f of ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"])
+                this.push(new Card(f+s));
+    }
+
+    toStringArray(){
+        let arr = [];
+        for(let e of this)
+            arr.push(e+"");
+        return arr
+    }
+
+    shuffle(){
+        let startingCardID = this[0].ID;
+        this.push(this.shift())
+        while(startingCardID != this[0].ID)
+            this.splice(Math.random()*this.length|0, 0, this.shift());
+        this.splice(Math.random()*this.length|0, 0, this.shift())
+    }
+}
 
 class Pile extends Array {
 
@@ -7,7 +32,7 @@ class Pile extends Array {
     constructor(arr){
         super()
         if(arr && arr instanceof Array){
-            this.assign(arr)
+            Pile.assign(this, arr)
         }
     }
 
@@ -15,7 +40,7 @@ class Pile extends Array {
         if(card instanceof Card){
             this.push(card)
             if(this.length == 1){
-                piles[this.#base = card.ID] = this
+                storedPiles[this.#base = card.ID] = this
             }
             card.pileID = this.#base
         } else {
@@ -23,17 +48,20 @@ class Pile extends Array {
         }
     }
 
-    assign(arr){
+    static assign(pile, arr){
         for(let e of arr){
-            this.add(e)
+            pile.add(e)
         }
     }
 }
 
 class Card extends Image {
 
-    #value;
-    #suit;
+    #faceValue;
+    #numValue;
+    #suitName;
+    #suitNum;
+    #suitSymbol;
     #ID;
 
     constructor(name = "AS", upright = 32){
@@ -41,33 +69,45 @@ class Card extends Image {
         if(!ID)
             throw new Error("Illegal card type");
         super()
-        this.#ID = name;
+        $(this).attr("card-id", this.#ID = name)
         this.upright = upright;
         this.classList.add("card")
         this.src = `art/${name}.svg`;
-        this.#value = (v => {
+        this.#faceValue = (v => {
             switch(v){
                 case "A":
+                    this.#numValue = 1;
                     return "Ace"
                 case "K":
+                    this.#numValue = 13;
                     return "King"
                 case "Q":
+                    this.#numValue = 12;
                     return "Queen"
                 case "J":
+                    this.#numValue = 11;
                     return "Jack"
                 default:
-                    return v
+                    return this.#numValue = +v
             }
         })(ID[1]);
-        this.#suit = (s => {
+        this.#suitName = (s => {
             switch(s){
                 case "S":
+                    this.#suitNum = 0
+                    this.#suitSymbol = "\u2664";
                     return "Spades";
                 case "H":
+                    this.#suitNum = 1
+                    this.#suitSymbol = "\u2665";
                     return "Hearts";
                 case "C":
+                    this.#suitNum = 2
+                    this.#suitSymbol = "\u2667";
                     return "Clubs";
                 case "D":
+                    this.#suitNum = 3
+                    this.#suitSymbol = "\u2666";
                     return "Diamonds"
             }
         })(ID[2])
@@ -77,7 +117,7 @@ class Card extends Image {
                 self = this,
                 $self = $(this),
                 pileID = this.pileID,
-                pile = piles[pileID];
+                pile = storedPiles[pileID];
             e = e || window.event;
             e.preventDefault();
             document.onmouseup = function(){
@@ -86,7 +126,7 @@ class Card extends Image {
                     let L = pile.length;
                     $(`.card[pile=${pileID}]`).each(function(i){
                         $(this).css({
-                            left: `calc(${(piles[pileID][L/2|0].offsetLeft - (L+1)%2*7)*100 / $self.parent()[0].offsetWidth}% + ${14*(i - (L-1)/2)}px)`, // [1]
+                            left: `calc(${(storedPiles[pileID][L/2|0].offsetLeft - (L+1)%2*7)*100 / $self.parent()[0].offsetWidth}% + ${14*(i - (L-1)/2)}px)`, // [1]
                             top: self.offsetTop*100 / $self.parent()[0].offsetHeight + "%"
                         })
                     })
@@ -142,16 +182,28 @@ class Card extends Image {
         return $(this).attr("pile")
     }
 
-    get suit(){
-        return this.#suit
+    get suitName(){
+        return this.#suitName
     }
 
-    get value(){
-        return this.#value
+    /*get faceValue(){
+        return this.#faceValue
+    }*/
+
+    get numValue(){
+        return this.#numValue
     }
 
     get ID(){
         return this.#ID
+    }
+
+    get suitNum(){
+        return this.#suitNum
+    }
+
+    toString(){
+        return `[Card: ${(this.#faceValue[0] || this.#faceValue) + this.#suitSymbol}]`
     }
 }
 
