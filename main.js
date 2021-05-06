@@ -37,7 +37,8 @@ class Card extends Image {
     #ID;
 
     constructor(name = "AS", upright = 32){
-        if(!name.match(/^[2-9KQJA][SHCD]$/))
+        let ID = name.match(/^([2-9KQJA]|10)([SHCD])$/);
+        if(!ID)
             throw new Error("Illegal card type");
         super()
         this.#ID = name;
@@ -57,7 +58,7 @@ class Card extends Image {
                 default:
                     return v
             }
-        })(name[0]);
+        })(ID[1]);
         this.#suit = (s => {
             switch(s){
                 case "S":
@@ -69,7 +70,7 @@ class Card extends Image {
                 case "D":
                     return "Diamonds"
             }
-        })(name[1])
+        })(ID[2])
         this.onmousedown = function(e){
             let oldX = this.offsetLeft + this.width/2,
                 oldY = this.offsetTop + this.height/2,
