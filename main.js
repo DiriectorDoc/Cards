@@ -75,7 +75,6 @@ class Deck extends CardArray {
 class Pile extends CardArray {
 
     #basePileID;
-    #basePile;
 
     constructor(arr){
         super()
@@ -86,12 +85,14 @@ class Pile extends CardArray {
 
     add(card){
         if(card instanceof Card){
-            $(card)
-                .css({
-                    left: `calc(${$(this.topCard).css("left")} + 14px)`,
-                    top: $(this.topCard).css("top")
-                })
-                .appendTo(document.body)
+            if(this.topCard){
+                $(card)
+                    .css({
+                        left: `calc(${this.topCard.style.left} + 14px)`,
+                        top: this.topCard.style.top
+                    })
+                    .appendTo(document.body)
+            }
             this.push(card)
             if(this.length == 1){
                 storedPiles[this.#basePileID = card.cardID] = this;
@@ -202,8 +203,8 @@ class Card extends Image {
                     } else if(hoverCards.length == 1){
                         $self
                             .css({
-                                left: `calc(${hoverCards.css("left")} + 14px)`,
-                                top: hoverCards.css("top")
+                                left: `calc(${hoverCards[0].style.left} + 14px)`,
+                                top: hoverCards[0].style.top
                             })
                             .appendTo(document.body)
                         new Pile([hoverCards[0], self])
