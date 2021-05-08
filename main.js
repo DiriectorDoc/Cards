@@ -1,12 +1,37 @@
 const storedPiles = {};
 
-class Deck extends Array {
+class CardArray extends Array {
 
-    constructor(){
-        super()
-        for(let s of ["S", "H", "C", "D"])
-            for(let f of ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"])
-                this.push(new Card(f+s));
+    sort(){
+        // Quick Sort, adapted from [https://gist.github.com/tamask/1080446]
+        for(let p, v, x, y, i = 2, l = 0, r = this.length - 1, s = [l, r]; i > 0;){
+            r = s[--i];
+            l = s[--i];
+            if(l < r){
+                // partition
+                x = l;
+                y = r - 1;
+                p = l;
+                v = this[p];
+                this[p] = this[r];
+                while(true){
+                    while(x <= y && null != this[x] && this[x].numID < v.numID)
+                        x++;
+                    while(x <= y && null != this[y] && this[y].numID >= v.numID)
+                        y--;
+                    if(x > y)
+                        break;
+                    [this[x], this[y]] = [this[y], this[x]]
+                }
+                this[r] = this[x];
+                this[x] = v;
+                // end
+                s[i++] = l;
+                s[i++] = x - 1;
+                s[i++] = x + 1;
+                s[i++] = r
+            }
+        }
     }
 
     toStringArray(){
@@ -16,18 +41,41 @@ class Deck extends Array {
         return arr
     }
 
+    get topCard(){
+        return this[this.length - 1]
+    }
+}
+
+class Deck extends CardArray {
+
+    constructor(){
+        super()
+        for(let s of ["S", "H", "C", "D"])
+            for(let f of ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"])
+                this.push(new Card(f+s));
+    }
+
     shuffle(){
+        // Fisher–Yates shuffle
+        for (let i = this.length - 1; i > 0; i--){
+            let j = (Math.random()*420.69|0) % (i + 1);
+            [this[i], this[j]] = [this[j], this[i]];
+        }
+        /*
+        // My shuffle; more thorough, takes longer (6000 x longer on average)
         let startingCardID = this[0].ID;
         this.push(this.shift())
         while(startingCardID != this[0].ID)
             this.splice(Math.random()*this.length|0, 0, this.shift());
         this.splice(Math.random()*this.length|0, 0, this.shift())
+        */
     }
 }
 
-class Pile extends Array {
+class Pile extends CardArray {
 
-    #base;
+    #basePileID;
+    #basePile;
 
     constructor(arr){
         super()
@@ -38,11 +86,17 @@ class Pile extends Array {
 
     add(card){
         if(card instanceof Card){
+            $(card)
+                .css({
+                    left: `calc(${$(this.topCard).css("left")} + 14px)`,
+                    top: $(this.topCard).css("top")
+                })
+                .appendTo(document.body)
             this.push(card)
             if(this.length == 1){
-                storedPiles[this.#base = card.ID] = this
+                storedPiles[this.#basePileID = card.cardID] = this;
             }
-            card.pileID = this.#base
+            card.basePile = this.#basePileID
         } else {
             console.error("Only objects of type Card can be added to Piles.")
         }
@@ -59,17 +113,17 @@ class Card extends Image {
 
     #faceValue;
     #numValue;
-    #suitName;
     #suitNum;
     #suitSymbol;
-    #ID;
+    #cardID;
+    #basePile;
 
     constructor(name = "AS", upright = 32){
         let ID = name.match(/^([2-9KQJA]|10)([SHCD])$/);
         if(!ID)
             throw new Error("Illegal card type");
         super()
-        $(this).attr("card-id", this.#ID = name)
+        $(this).attr("card-id", this.#cardID = name)
         this.upright = upright;
         this.classList.add("card")
         this.src = `art/${name}.svg`;
@@ -91,26 +145,29 @@ class Card extends Image {
                     return this.#numValue = +v
             }
         })(ID[1]);
-        this.#suitName = (s => {
+        this.#suitSymbol = (s => {
             switch(s){
                 case "S":
-                    this.#suitNum = 0
-                    this.#suitSymbol = "\u2664";
-                    return "Spades";
+                    this.#suitNum = 0;
+                    return "\u2664";
                 case "H":
-                    this.#suitNum = 1
-                    this.#suitSymbol = "\u2665";
-                    return "Hearts";
+                    this.#suitNum = 1;
+                    return "\u2665";
                 case "C":
-                    this.#suitNum = 2
-                    this.#suitSymbol = "\u2667";
-                    return "Clubs";
+                    this.#suitNum = 2;
+                    return "\u2667";
                 case "D":
-                    this.#suitNum = 3
-                    this.#suitSymbol = "\u2666";
-                    return "Diamonds"
+                    this.#suitNum = 3;
+                    return "\u2666"
             }
         })(ID[2])
+        //$(this).forwardevents({directEventsTo:$(".card")})
+        this.onmouseover = function(e){
+            $(this).addClass("hover")
+        }
+        this.onmouseout = function(e){
+            $(this).removeClass("hover")
+        }
         this.onmousedown = function(e){
             let oldX = this.offsetLeft + this.width/2,
                 oldY = this.offsetTop + this.height/2,
@@ -120,11 +177,14 @@ class Card extends Image {
                 pile = storedPiles[pileID];
             e = e || window.event;
             e.preventDefault();
-            document.onmouseup = function(){
+            document.onmouseup = function(e){
+                e = e || window.event;
+                e.preventDefault()
                 document.onmouseup = document.onmousemove = null;
+                $(".card").trigger("mouseout")
                 if(pileID){
                     let L = pile.length;
-                    $(`.card[pile=${pileID}]`).each(function(i){
+                    $(`.card[pile=${pileID}]`).each(function(i,e){
                         $(this).css({
                             left: `calc(${(storedPiles[pileID][L/2|0].offsetLeft - (L+1)%2*7)*100 / $self.parent()[0].offsetWidth}% + ${14*(i - (L-1)/2)}px)`, // [1]
                             top: self.offsetTop*100 / $self.parent()[0].offsetHeight + "%"
@@ -135,11 +195,25 @@ class Card extends Image {
                         left: self.offsetLeft*100 / $self.parent()[0].offsetWidth + "%",
                         top: self.offsetTop*100 / $self.parent()[0].offsetHeight + "%"
                     })
+                    let hoverCards = $(document.elementsFromPoint(e.clientX, e.clientY)).filter(".card").not(self),
+                        pileCards = hoverCards.filter("[pile]");
+                    if(pileCards.length){
+                        pileCards[0].basePile.add(self)
+                    } else if(hoverCards.length == 1){
+                        $self
+                            .css({
+                                left: `calc(${hoverCards.css("left")} + 14px)`,
+                                top: hoverCards.css("top")
+                            })
+                            .appendTo(document.body)
+                        new Pile([hoverCards[0], self])
+                    }
                 }
             };
             document.onmousemove = function(e){
                 e = e || window.event;
-                e.preventDefault();
+                e.preventDefault()
+                let hoverCards = $(document.elementsFromPoint(e.clientX, e.clientY)).filter(".card");
                 if(pileID){
                     let L = pile.length;
                     $(`.card[pile=${pileID}]`).each(function(i){
@@ -153,11 +227,20 @@ class Card extends Image {
                         left: self.offsetLeft - oldX + e.clientX,
                         top: self.offsetTop - oldY + e.clientY
                     })
+                    if(hoverCards.length > 1){
+                        hoverCards.addClass("hover")
+                    } else {
+                        $(".card").removeClass("hover")
+                    }
                 }
                 oldX = self.offsetLeft + self.width/2;
                 oldY = self.offsetTop + self.height/2;
             }
         }
+
+        //$(this).on("mouseover", function(e){
+            
+        //})
     }
 
     /**
@@ -173,33 +256,26 @@ class Card extends Image {
     }
 
     /**
-     * @param {string} ID
+     * @param {string} pileID
      */
-    set pileID(ID){
-        $(this).attr("pile", ID)
+    set basePile(pileID){
+        $(this).attr("pile", pileID)
+        this.#basePile = storedPiles[pileID]
     }
+    get basePile(){
+        return this.#basePile
+    }
+
     get pileID(){
         return $(this).attr("pile")
     }
 
-    get suitName(){
-        return this.#suitName
+    get cardID(){
+        return this.#cardID
     }
 
-    /*get faceValue(){
-        return this.#faceValue
-    }*/
-
-    get numValue(){
-        return this.#numValue
-    }
-
-    get ID(){
-        return this.#ID
-    }
-
-    get suitNum(){
-        return this.#suitNum
+    get numID(){
+        return this.#numValue + 13*this.#suitNum
     }
 
     toString(){
@@ -219,7 +295,8 @@ function noConsole(e){
 const table = [];
 
 $(function(){
-    $(document.body).append(new Pile([new Card("KH"), new Card("QH"), new Card("JH")]))
+    $(document.body).append([new Card("KH"), new Card("QH"), new Card("JH")])
+    $(document.body).append(new Pile([new Card("KS"), new Card("QS"), new Card("JS"), new Card("10S")]))
 })
 
 

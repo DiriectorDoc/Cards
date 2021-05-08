@@ -12,18 +12,22 @@ body {
     cursor: -moz-grab;
     cursor: grab;
     margin-left: -80px;
+    outline: none;
 
     &:first-of-type {
         margin: 0;
     }
 
-    &:hover {
+    &.hover {
         z-index: 100;
+        box-shadow: 2px 2px 7px #9ce, -2px -2px 7px #9ce, -2px 2px 7px #9ce, 2px -2px 7px #9ce;
     }
 
     &:active {
         cursor: -webkit-grabbing;
         cursor: -moz-grabbing;
         cursor: grabbing;
+        box-shadow: none;
+        z-index: 200;
     }
 }
