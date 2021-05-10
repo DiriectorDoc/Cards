@@ -1,4 +1,87 @@
-const storedPiles = {};
+const playTable = new class {
+
+    #contextMenu = null;
+    storedPiles = {};
+
+    /**
+     * @param {ContextMenu} menu
+     */
+    set contextMenu(menu){
+        menu && this.#contextMenu?.close()
+        this.#contextMenu = menu
+    }
+
+    get contextMenu(){
+        return this.#contextMenu
+    }
+};
+
+class ContextMenu {
+
+    #$obj;
+    #context;
+
+    constructor(structure){
+        if(!structure)
+            throw new Error("New instances of ContextMenu require a parameter.");
+        this.#$obj = $('<div class="context-menu">')
+        this.#context = structure.context;
+        this.#$obj
+            .append(`<div class="context-menu-header">${structure.header}</div>`)
+            .css({
+                top: structure.top,
+                left: structure.left
+            })
+        for(let s of structure.sections){
+            this.#$obj.append("<hr />")
+            let menu = $('<div class="context-menu-options"></div>'),
+                self = this;
+            for(let e of s.options){
+                menu.append($(`<div class="option">${e.text}</div>`).click(function(){
+                    e.callback(structure.context)
+                    self.close()
+                }))
+            }
+            this.#$obj.append(menu)
+        }
+        this.#$obj.appendTo(".overlay")
+        this.#context.addClass("highlighted")
+    }
+
+    close(){
+        this.#$obj.remove()
+        this.#context.removeClass("highlighted")
+        playTable.contextMenu = null
+    }
+    /*
+    Usage:
+    
+    new ContextMenu({
+        header: "King of Hearts",
+        sections: [
+            {
+                options: [
+                    {
+                        text: "Do Something",
+                        callback: function(context) {
+                            //doSomething(context)
+                        }
+                    },
+                    {
+                        text: "Do Something else",
+                        callback: function(context) {
+                            //doSomething(context)
+                        }
+                    }
+                ]
+            }
+        ],
+        top: 10,
+        left: 30,
+        context: $('[card-id="KH"]')
+    })
+    */
+}
 
 class CardArray extends Array {
 
@@ -91,11 +174,11 @@ class Pile extends CardArray {
                         left: `calc(${this.topCard.style.left} + 14px)`,
                         top: this.topCard.style.top
                     })
-                    .appendTo(document.body)
+                    .appendTo(".play-table")
             }
             this.push(card)
             if(this.length == 1){
-                storedPiles[this.#basePileID = card.cardID] = this;
+                playTable.storedPiles[this.#basePileID = card.cardID] = this;
             }
             card.basePile = this.#basePileID
         } else {
@@ -114,6 +197,7 @@ class Card extends Image {
 
     #faceValue;
     #numValue;
+    #suitName;
     #suitNum;
     #suitSymbol;
     #cardID;
@@ -146,28 +230,52 @@ class Card extends Image {
                     return this.#numValue = +v
             }
         })(ID[1]);
-        this.#suitSymbol = (s => {
+        [this.#suitSymbol, this.#suitNum, this.#suitName] = (s => {
             switch(s){
                 case "S":
-                    this.#suitNum = 0;
-                    return "\u2664";
+                    return ["\u2664", 0, "Spades"];
                 case "H":
-                    this.#suitNum = 1;
-                    return "\u2665";
+                    return ["\u2665", 1, "Hearts"];
                 case "C":
-                    this.#suitNum = 2;
-                    return "\u2667";
+                    return ["\u2667", 2, "Clubs"];
                 case "D":
-                    this.#suitNum = 3;
-                    return "\u2666"
+                    return ["\u2666", 3, "Diamonds"]
             }
         })(ID[2])
-        //$(this).forwardevents({directEventsTo:$(".card")})
         this.onmouseover = function(e){
+            e.preventDefault()
             $(this).addClass("hover")
         }
         this.onmouseout = function(e){
+            e.preventDefault()
             $(this).removeClass("hover")
+        }
+        this.oncontextmenu = function(e){
+            e.preventDefault()
+            playTable.contextMenu = new ContextMenu({
+                header: this.#faceValue + " of " + this.#suitName,
+                sections: [
+                    {
+                        options: [
+                            {
+                                text: "Do Something",
+                                callback: function(context) {
+                                    //doSomething(context)
+                                }
+                            },
+                            {
+                                text: "Do Something else",
+                                callback: function(context) {
+                                    //doSomething(context)
+                                }
+                            }
+                        ]
+                    }
+                ],
+                top: e.clientY,
+                left: e.clientX,
+                context: $(this)
+            })
         }
         this.onmousedown = function(e){
             let oldX = this.offsetLeft + this.width/2,
@@ -175,19 +283,19 @@ class Card extends Image {
                 self = this,
                 $self = $(this),
                 pileID = this.pileID,
-                pile = storedPiles[pileID];
-            e = e || window.event;
-            e.preventDefault();
+                pile = playTable.storedPiles[pileID];
+            e.preventDefault()
             document.onmouseup = function(e){
                 e = e || window.event;
                 e.preventDefault()
                 document.onmouseup = document.onmousemove = null;
                 $(".card").trigger("mouseout")
+                $self.addClass("hover")
                 if(pileID){
                     let L = pile.length;
-                    $(`.card[pile=${pileID}]`).each(function(i,e){
+                    $(`.card[pile=${pileID}]`).each(function(i){
                         $(this).css({
-                            left: `calc(${(storedPiles[pileID][L/2|0].offsetLeft - (L+1)%2*7)*100 / $self.parent()[0].offsetWidth}% + ${14*(i - (L-1)/2)}px)`, // [1]
+                            left: `calc(${(playTable.storedPiles[pileID][L/2|0].offsetLeft - (L+1)%2*7)*100 / $self.parent()[0].offsetWidth}% + ${14*(i - (L-1)/2)}px)`, // [1]
                             top: self.offsetTop*100 / $self.parent()[0].offsetHeight + "%"
                         })
                     })
@@ -206,15 +314,15 @@ class Card extends Image {
                                 left: `calc(${hoverCards[0].style.left} + 14px)`,
                                 top: hoverCards[0].style.top
                             })
-                            .appendTo(document.body)
+                            .appendTo(".play-table")
                         new Pile([hoverCards[0], self])
                     }
                 }
             };
             document.onmousemove = function(e){
-                e = e || window.event;
                 e.preventDefault()
                 let hoverCards = $(document.elementsFromPoint(e.clientX, e.clientY)).filter(".card");
+                $self.removeClass("hover")
                 if(pileID){
                     let L = pile.length;
                     $(`.card[pile=${pileID}]`).each(function(i){
@@ -261,7 +369,7 @@ class Card extends Image {
      */
     set basePile(pileID){
         $(this).attr("pile", pileID)
-        this.#basePile = storedPiles[pileID]
+        this.#basePile = playTable.storedPiles[pileID]
     }
     get basePile(){
         return this.#basePile
@@ -296,8 +404,8 @@ function noConsole(e){
 const table = [];
 
 $(function(){
-    $(document.body).append([new Card("KH"), new Card("QH"), new Card("JH")])
-    $(document.body).append(new Pile([new Card("KS"), new Card("QS"), new Card("JS"), new Card("10S")]))
+    $(".play-table").append([new Card("KH"), new Card("QH"), new Card("JH")])
+    $(".play-table").append(new Pile([new Card("KS"), new Card("QS"), new Card("JS"), new Card("10S")]))
 })
 
 

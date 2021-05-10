@@ -1,7 +1,23 @@
 body {
     margin: 0;
+}
+
+.play-table {
+    width: 100vw;
     height: 100vh;
     background: #056941 url(img/tablecloth.png) repeat;
+}
+
+.overlay {
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    position: absolute;
+    pointer-events: none;
+
+    * {
+        pointer-events: auto;
+    }
 }
 
 .card {
@@ -23,11 +39,65 @@ body {
         box-shadow: 2px 2px 7px #9ce, -2px -2px 7px #9ce, -2px 2px 7px #9ce, 2px -2px 7px #9ce;
     }
 
+    &.highlighted {
+        z-index: 100;
+        box-shadow: 2px 2px 7px #EDEC80, -2px -2px 7px #EDEC80, -2px 2px 7px #EDEC80, 2px -2px 7px #EDEC80;
+    }
+
     &:active {
         cursor: -webkit-grabbing;
         cursor: -moz-grabbing;
         cursor: grabbing;
-        box-shadow: none;
-        z-index: 200;
+        z-index: 100;
+    }
+}
+
+.context-menu {
+    position: -webkit-sticky;
+    position: sticky;
+    width: -webkit-fit-content;
+    width: -moz-fit-content;
+    width: fit-content;
+    background: rgba(0, 0, 0, .75);
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    border-radius: 3px 1em 1em 1em;
+    padding: .5em 0;
+    overflow: hidden;
+    z-index: 200;
+
+    hr {
+        border: 0;
+        border-top: 1px solid white;
+    }
+
+    * {
+        user-select: none;
+    }
+
+    .context-menu-header {
+        padding: 0 .5em;
+        font-weight: bold;
+        text-align: center;
+    }
+
+    .context-menu-options {
+        .option {
+            padding: 0 .5em;
+            cursor: pointer;
+
+            &:hover {
+                background: rgba(255, 255, 255, .3);
+            }
+
+            &:nth-child(2n) {
+                border: dotted white;
+                border-width: .5px 0;
+            }
+
+            &:last-child {
+                border-width: .5px 0 0 0;
+            }
+        }
     }
 }
