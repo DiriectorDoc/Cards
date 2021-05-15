@@ -1,7 +1,17 @@
-const playTable = $('<div class="play-table">')[0];
+const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+
+      playTable = $('<div class="play-table">')[0];
 Object.assign(playTable, {
     contextMenu: null,
-    storedPiles: {}
+    storedPiles: {},
+    selectedCards: [],
+    injectedStylesheet: {
+        ...$("<style>"),
+    
+        setRules: function(selector, rules){
+            $(this).html($(this).html().replace(new RegExp(escapeRegExp(selector) + " \\{.+\\}"), `${selector} {${$("<a>").css(rules).attr("style")}}`))
+        }
+    }
 })
 
 class ContextMenu {
@@ -38,12 +48,27 @@ class ContextMenu {
 
     close(){
         this.#$obj.remove()
-        this.#context.removeClass("highlighted")
+        playTable.selectedCards = [];
+        $(".highlighted").removeClass("highlighted")
         playTable.contextMenu = null
     }
 }
 
 class CardArray extends Array {
+
+    constructor(){
+        super(...[...arguments].map(function(e){
+            if("string" == typeof e && e.match(/^([2-9KQJA]|10)([SHCD])$/))
+                return new Card(e);
+            if(e instanceof Card)
+                return e;
+            throw new Error("Only objects of type Card can be in a CardArray.")
+        }))
+    }
+
+    toPile(){
+        return new Pile(this)
+    }
 
     sort(){
         // Quick Sort, adapted from [https://gist.github.com/tamask/1080446]
@@ -162,6 +187,7 @@ class Card extends Image {
     #suitSymbol;
     #cardID;
     #basePile;
+    moved;
 
     constructor(name = "AS", upright = 32){
         let ID = name.match(/^([2-9KQJA]|10)([SHCD])$/);
@@ -235,13 +261,13 @@ class Card extends Image {
             })
         }
         this.onmousedown = function(e){
+            e.preventDefault()
             let oldX = this.offsetLeft + this.width/2,
                 oldY = this.offsetTop + this.height/2,
                 self = this,
                 $self = $(this),
                 pileID = this.pileID,
                 pile = playTable.storedPiles[pileID];
-            e.preventDefault()
             $self.removeClass("hover")
             document.onmouseup = function(e){
                 e = e || window.event;
@@ -253,14 +279,14 @@ class Card extends Image {
                     let L = pile.length;
                     $(`.card[pile=${pileID}]`).each(function(i){
                         $(this).css({
-                            left: `calc(${(playTable.storedPiles[pileID][L/2|0].offsetLeft - (L+1)%2*7)*100 / playTable.offsetWidth}% + ${14*(i - (L-1)/2)}px)`, // [1]
-                            top: self.offsetTop*100 / playTable.offsetHeight + "%"
+                            left: `calc(${(playTable.storedPiles[pileID][L/2|0].offsetLeft - (L+1)%2*7)*100 / document.body.offsetWidth}% + ${14*(i - (L-1)/2)}px)`, // [1]
+                            top: self.offsetTop*100 / document.body.offsetHeight + "%"
                         })
                     })
                 } else {
                     $self.css({
-                        left: self.offsetLeft*100 / playTable.offsetWidth + "%",
-                        top: self.offsetTop*100 / playTable.offsetHeight + "%"
+                        left: self.offsetLeft*100 / document.body.offsetWidth + "%",
+                        top: self.offsetTop*100 / document.body.offsetHeight + "%"
                     })
                     let hoverCards = $(document.elementsFromPoint(e.clientX, e.clientY)).filter(".card").not(self),
                         pileCards = hoverCards.filter("[pile]");
@@ -276,10 +302,18 @@ class Card extends Image {
                         new Pile([hoverCards[0], self])
                     }
                 }
+                if(!self.moved){
+                    playTable.selectedCards.push(self)
+                    $(self).addClass("highlighted")
+                }
+                self.moved = false
             };
             document.onmousemove = function(e){
                 e.preventDefault()
-                let hoverCards = $(document.elementsFromPoint(e.clientX, e.clientY)).filter(".card");
+                let hoverElements = $(document.elementsFromPoint(e.clientX, e.clientY)),
+                    hoverCards = hoverElements.filter(".card"),
+                    hand = hoverElements.filter(".hand");
+                self.moved = true;
                 if(pileID){
                     let L = pile.length;
                     $(`.card[pile=${pileID}]`).each(function(i){
@@ -354,10 +388,28 @@ function noConsole(e){
     }
 }
 
+
+$(playTable)
+    .click(function(e){
+        e.preventDefault()
+        if(!(e.target instanceof Card)){
+            playTable.selectedCards = [];
+            $(".highlighted").removeClass("highlighted")
+        }
+    })
+    .on("mousedown", function(e){
+        e.preventDefault()
+        playTable.contextMenu?.close()
+    })
+    //.prepend('<img width="95" height="133" class="card-helper" />')
+
 $(function(){
     $(playTable).append([new Card("KH"), new Card("QH"), new Card("JH")])
     $(playTable).append(new Pile([new Card("KS"), new Card("QS"), new Card("JS"), new Card("10S")]))
-    $(document.body).prepend(playTable)
+    $(".play-area").prepend(playTable)
+    $(".hand").mouseenter(function(e){
+        console.log($(".card:active").appendTo(".hand"))
+    })
 })
 
 
