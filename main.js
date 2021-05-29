@@ -44,10 +44,11 @@ function checkOptions(table, hand){
      * Cards are modded (%) by 13.
      * As-Qs become 1-12 | Ks becomes 0
      */
-
-    function getOptionsFromByteArray(cardArray){
-        let buildOptions = [],
-            buildTempArray = []; // Really, I want a maximum index of 10. a length of 11 makes things easier;
+    let playOptions = [];
+    for(let i in hand){
+        let cardArray = table.concat(hand[i]),
+            buildOptions = [],
+            handAfterPlay = [...hand]; handAfterPlay.splice(i, 1)
         /*
          * Added every card as a "pickup" option
          * Remove all face cards in the process
@@ -145,40 +146,13 @@ function checkOptions(table, hand){
                                             cards: [cardArray[i], cardArray[j], cardArray[k], cardArray[l], cardArray[m], cardArray[n], cardArray[o]]
                                         });
     
-        /*
-         * Gather all possible sums
-         */
-        for(let b of buildOptions){
-            let index = b.building ?? b.pickUp,
-                value = b.cards ?? [b.card];
-            /*
-            if(buildTempArray[index]){
-                buildTempArray[index].push(value)
-            } else {
-                buildTempArray[index] = [value]
-            }
-            */
-            buildTempArray[index]?.push(value) ?? (buildTempArray[index] = [value])
-        }
-        for(let i in buildTempArray){
-            if(buildTempArray[i].length > 1){
-                buildOptions.push({building: i, ways: buildTempArray[i]})
-            }
-        }
-
-        return buildOptions
-    }
-    let playOptions = [];
-    for(let i in hand){
-        let buildOptions = getOptionsFromByteArray(table.concat(hand[i])),
-            handAfterPlay = [...hand]; handAfterPlay.splice(i, 1)
         for(let j in handAfterPlay){
             for(let b of buildOptions){
                 if(b.pickUp === handAfterPlay[j]%13 && b.card != hand[i]){
                     playOptions.push({collect: [b.card], with: handAfterPlay[j]})
                     continue
                 }
-                if(b.cards?.includes(hand[i])){
+                if(b.cards?.includes(hand[i]) && handAfterPlay.some(card => card%13 === b.building)){
                     playOptions.push({build: b.building, with: b.cards})
                     continue
                 }
