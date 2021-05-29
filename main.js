@@ -1,37 +1,231 @@
 const escapeRegExp = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
 
-      playTable = $('<div class="play-table">')[0];
-Object.assign(playTable, {
-    contextMenu: null,
-    storedPiles: {},
-    selectedCards: [],
-    injectedStylesheet: {
-        ...$("<style>"),
+      playTable = Object.assign($('<div class="play-table">')[0], {
+          contextMenu: null,
+          storedPiles: {},
+          selectedCards: [],
+          injectedStylesheet: Object.assign($("<style>")[0], {
+              setRules: function(selector, rules){
+                  let html = $(this).html();
+                  if(html.match(new RegExp(escapeRegExp(selector) + " \\{.+\\}"))){
+
+                  } else {
+                      $(this).append(`${selector} {${$("<a>").css(rules).attr("style")}}`)
+                  }
+              }
+          })
+      }),
+      
+      SpecificError = class extends Error{};
+
+function checkOptions(table, hand){
+    /*
+     * Legend:
+     * 1-52 Card
+         * 1    A♤
+         * 2    2♤
+         * 10   10♤
+         * 11   J♤
+         * 12   Q♤
+         * 13   K♤
+         * 14   A♥
+         * 26   K♥
+         * 27   A♧
+         * 39   K♧
+         * 40   A♦
+         * 52   K♦
+     * 91-3 `[` and `]` for determining start and stop of sub arrays
+     * 101  The number 1
+     * 102  The number 2
+     * ...
+     * 110  The number 10
+     * 
+     * Note:
+     * Cards are modded (%) by 13.
+     * As-Qs become 1-12 | Ks becomes 0
+     */
+
+    function getOptionsFromByteArray(cardArray){
+        let buildOptions = [],
+            buildTempArray = []; // Really, I want a maximum index of 10. a length of 11 makes things easier;
+        /*
+         * Added every card as a "pickup" option
+         * Remove all face cards in the process
+         */
+        for(let i = 0; i < cardArray.length; i++){
+            if(typeof cardArray[i] == "object"){
+                buildOptions.push({building: cardArray[i][0] - 100, cards: cardArray[i].slice(1)})
+                cardArray.splice(i--, 1)
+                continue;
+            }
+            buildOptions.push({pickUp: cardArray[i]%13, card: cardArray[i]})
+            if(cardArray[i]%13 > 10 || cardArray[i]%13 === 0){
+                cardArray.splice(i--, 1)
+            }
+        }
     
-        setRules: function(selector, rules){
-            $(this).html($(this).html().replace(new RegExp(escapeRegExp(selector) + " \\{.+\\}"), `${selector} {${$("<a>").css(rules).attr("style")}}`))
+        /*
+         * All possible sums of 2 cards
+         */
+        for(let i = 0; i < cardArray.length - 1; i++)
+            for(let j = 1 + i; j < cardArray.length; j++)
+                if(cardArray[i]%13 + cardArray[j]%13 <= 10)
+                    buildOptions.push({
+                        building: cardArray[i]%13 + cardArray[j]%13,
+                        cards: [cardArray[i], cardArray[j]]
+                    });
+        /*
+         * All possible sums of 3 cards
+         */
+        for(let i = 0; i < cardArray.length - 2; i++)
+            for(let j = 1 + i; j < cardArray.length - 1; j++)
+                for(let k = 1 + j; k < cardArray.length; k++)
+                    if(cardArray[i]%13 + cardArray[j]%13 + cardArray[k]%13 <= 10)
+                        buildOptions.push({
+                            building: cardArray[i]%13 + cardArray[j]%13 + cardArray[k]%13,
+                            cards: [cardArray[i], cardArray[j], cardArray[k]]
+                        });
+        /*
+         * All possible sums of 4 cards
+         * 4 is the maximum number of cards for all different card values
+         * 5 cards or mor with all different cards would have a sum greter than 10
+         */
+        for(let i = 0; i < cardArray.length - 3; i++)
+            for(let j = 1 + i; j < cardArray.length - 2; j++)
+                for(let k = 1 + j; k < cardArray.length - 1; k++)
+                    for(let l = 1 + k; l < cardArray.length; l++)
+                        if(cardArray[i]%13 + cardArray[j]%13 + cardArray[k]%13 + cardArray[l]%13 <= 10)
+                            buildOptions.push({
+                                building: cardArray[i]%13 + cardArray[j]%13 + cardArray[k]%13 + cardArray[l]%13,
+                                cards: [cardArray[i], cardArray[j], cardArray[k], cardArray[l]]
+                            });
+        /*
+         * All possible sums of 5 cards
+         * Includes duplicate-valued cards
+         */
+        for(let i = 0; i < cardArray.length - 4; i++)
+            for(let j = 1 + i; j < cardArray.length - 3; j++)
+                for(let k = 1 + j; k < cardArray.length - 2; k++)
+                    for(let l = 1 + k; l < cardArray.length - 1; l++)
+                        for(let m = 1 + l; m < cardArray.length; m++)
+                            if(cardArray[i]%13 + cardArray[j]%13 + cardArray[k]%13 + cardArray[l]%13 + cardArray[m]%13 <= 10)
+                                buildOptions.push({
+                                    building: cardArray[i]%13 + cardArray[j]%13 + cardArray[k]%13 + cardArray[l]%13 + cardArray[m]%13,
+                                    cards: [cardArray[i], cardArray[j], cardArray[k], cardArray[l], cardArray[m]]
+                                });
+        /*
+         * All possible sums of 6 cards
+         * Includes duplicate-valued cards
+         */
+        for(let i = 0; i < cardArray.length - 5; i++)
+            for(let j = 1 + i; j < cardArray.length - 4; j++)
+                for(let k = 1 + j; k < cardArray.length - 3; k++)
+                    for(let l = 1 + k; l < cardArray.length - 2; l++)
+                        for(let m = 1 + l; m < cardArray.length - 1; m++)
+                            for(let n = 1 + m; n < cardArray.length; n++)
+                                if(cardArray[i]%13 + cardArray[j]%13 + cardArray[k]%13 + cardArray[l]%13 + cardArray[m]%13 + cardArray[n]%13 <= 10)
+                                    buildOptions.push({
+                                        building: cardArray[i]%13 + cardArray[j]%13 + cardArray[k]%13 + cardArray[l]%13 + cardArray[m]%13 + cardArray[n]%13,
+                                        cards: [cardArray[i], cardArray[j], cardArray[k], cardArray[l], cardArray[m], cardArray[n]]
+                                    });
+        /*
+         * All possible sums of 7 cards
+         * Includes duplicate-valued cards
+         */
+        for(let i = 0; i < cardArray.length - 6; i++)
+            for(let j = 1 + i; j < cardArray.length - 5; j++)
+                for(let k = 1 + j; k < cardArray.length - 4; k++)
+                    for(let l = 1 + k; l < cardArray.length - 3; l++)
+                        for(let m = 1 + l; m < cardArray.length - 2; m++)
+                            for(let n = 1 + m; n < cardArray.length - 1; n++)
+                                for(let o = 1 + n; o < cardArray.length; o++)
+                                    if(cardArray[i]%13 + cardArray[j]%13 + cardArray[k]%13 + cardArray[l]%13 + cardArray[m]%13 + cardArray[n]%13 + cardArray[o]%13 <= 10)
+                                        buildOptions.push({
+                                            building: cardArray[i]%13 + cardArray[j]%13 + cardArray[k]%13 + cardArray[l]%13 + cardArray[m]%13 + cardArray[n]%13 + cardArray[o]%13,
+                                            cards: [cardArray[i], cardArray[j], cardArray[k], cardArray[l], cardArray[m], cardArray[n], cardArray[o]]
+                                        });
+    
+        /*
+         * Gather all possible sums
+         */
+        for(let b of buildOptions){
+            let index = b.building ?? b.pickUp,
+                value = b.cards ?? [b.card];
+            /*
+            if(buildTempArray[index]){
+                buildTempArray[index].push(value)
+            } else {
+                buildTempArray[index] = [value]
+            }
+            */
+            buildTempArray[index]?.push(value) ?? (buildTempArray[index] = [value])
+        }
+        for(let i in buildTempArray){
+            if(buildTempArray[i].length > 1){
+                buildOptions.push({building: i, ways: buildTempArray[i]})
+            }
+        }
+
+        return buildOptions
+    }
+    let playOptions = [];
+    for(let i in hand){
+        let buildOptions = getOptionsFromByteArray(table.concat(hand[i])),
+            handAfterPlay = [...hand]; handAfterPlay.splice(i, 1)
+        for(let j in handAfterPlay){
+            for(let b of buildOptions){
+                if(b.pickUp === handAfterPlay[j]%13 && b.card != hand[i]){
+                    playOptions.push({collect: [b.card], with: handAfterPlay[j]})
+                    continue
+                }
+                if(b.cards?.includes(hand[i])){
+                    playOptions.push({build: b.building, with: b.cards})
+                    continue
+                }
+                if(b.building === handAfterPlay[j]%13){
+                    playOptions.push({collect: b.cards, with: handAfterPlay[j]})
+                    continue
+                }
+            }
         }
     }
-})
+
+    /*
+     * All the options have been discovered
+     * Now it's time to assess the cards in hand
+     */
+
+    /*for(let b of buildOptions){
+        for(let h in hand){
+            if(b.pickUp){
+                if(b.pickUp === h){
+                    playOptions.push({take: b.card, with: h})
+                }
+                continue;
+            }
+        }
+    }*/
+    return playOptions
+}
 
 class ContextMenu {
 
-    #$obj;
     #context;
 
     constructor(structure){
         if(!structure)
-            throw new Error("New instances of ContextMenu require a parameter.");
-        this.#$obj = $('<div class="context-menu">')
+            throw new SpecificError("New instances of ContextMenu require a parameter.");
+        this[0] = $('<div class="context-menu">')[0];
+        this.length = 1;
         this.#context = structure.context;
-        this.#$obj
+        $(this)
             .append(`<div class="context-menu-header">${structure.header}</div>`)
             .css({
                 top: structure.top,
                 left: structure.left
             })
         for(let s of structure.sections){
-            this.#$obj.append("<hr />")
+            $(this).append("<hr />")
             let menu = $('<div class="context-menu-options"></div>'),
                 self = this;
             for(let e of s.options){
@@ -40,14 +234,14 @@ class ContextMenu {
                     self.close()
                 }))
             }
-            this.#$obj.append(menu)
+            $(this).append(menu)
         }
-        this.#$obj.appendTo(".overlay")
+        $(this).appendTo(".overlay")
         this.#context.addClass("highlighted")
     }
 
     close(){
-        this.#$obj.remove()
+        $(this).remove()
         playTable.selectedCards = [];
         $(".highlighted").removeClass("highlighted")
         playTable.contextMenu = null
@@ -57,13 +251,7 @@ class ContextMenu {
 class CardArray extends Array {
 
     constructor(){
-        super(...[...arguments].map(function(e){
-            if("string" == typeof e && e.match(/^([2-9KQJA]|10)([SHCD])$/))
-                return new Card(e);
-            if(e instanceof Card)
-                return e;
-            throw new Error("Only objects of type Card can be in a CardArray.")
-        }))
+        super(CardArray.arrayToCardArray(arguments))
     }
 
     toPile(){
@@ -109,18 +297,15 @@ class CardArray extends Array {
         return arr
     }
 
-    get topCard(){
-        return this[this.length - 1]
+    push(){
+        super.push(CardArray.arrayToCardArray(arguments))
     }
-}
 
-class Deck extends CardArray {
-
-    constructor(){
-        super()
-        for(let s of ["S", "H", "C", "D"])
-            for(let f of ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"])
-                this.push(new Card(f+s));
+    remove(card){
+        card = new Card(card);
+        for(let i in this)
+            if(this[i].numID == card.numID)
+                return this.splice(i, 1);
     }
 
     shuffle(){
@@ -138,11 +323,36 @@ class Deck extends CardArray {
         this.splice(Math.random()*this.length|0, 0, this.shift())
         */
     }
+
+    get topCard(){
+        return this[this.length - 1]
+    }
+
+    static arrayToCardArray(array){
+        try {
+            return [...(arguments.length > 1 ? arguments:array)].map(e => new Card(e))
+        } catch(err){
+            if(err instanceof SpecificError){
+                throw new SpecificError("Illegal parameters")
+            }
+            throw err
+        }
+    }
+}
+
+class Deck extends CardArray {
+
+    constructor(){
+        super()
+        for(let s of ["S", "H", "C", "D"])
+            for(let f of ["A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K"])
+                this.push(new Card(f+s));
+    }
 }
 
 class Pile extends CardArray {
 
-    #basePileID;
+    basePileID;
 
     constructor(arr){
         super()
@@ -163,9 +373,9 @@ class Pile extends CardArray {
             }
             this.push(card)
             if(this.length == 1){
-                playTable.storedPiles[this.#basePileID = card.cardID] = this;
+                playTable.storedPiles[this.basePileID = card.cardID] = this;
             }
-            card.basePile = this.#basePileID
+            card.basePile = this.basePileID
         } else {
             console.error("Only objects of type Card can be added to Piles.")
         }
@@ -176,29 +386,56 @@ class Pile extends CardArray {
             pile.add(e)
         }
     }
+
+    build(value){
+        return new BuildingPile(this, value)
+    }
+}
+
+class BuildingPile extends Pile {
+    constructor(arr, value){
+        super(arr)
+        this.building = value
+    }
+
+    /**
+     * @param {number} value
+     */
+    set building(value){
+        $(playTable.storedPiles[this.basePileID][0]).attr("building", value)
+    }
+    get building(){
+        return $(playTable.storedPiles[this.basePileID][0]).attr("building")
+    }
 }
 
 class Card extends Image {
 
     #faceValue;
-    #numValue;
     #suitName;
-    #suitNum;
     #suitSymbol;
-    #cardID;
     #basePile;
+    cardID;
     moved;
+    numID;
 
     constructor(name = "AS", upright = 32){
+        super()
+        if(name instanceof Card){
+            name = name.cardID
+        } else if(typeof name == "number"){
+            this.numID = name;
+            name = ["K", "A", 2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q"][name%13] + ["S", "H", "C", "D"][(name-1)/13|0]
+        }
         let ID = name.match(/^([2-9KQJA]|10)([SHCD])$/);
         if(!ID)
-            throw new Error("Illegal card type");
-        super()
-        $(this).attr("card-id", this.#cardID = name)
+            throw new SpecificError("Illegal card type");
+        $(this).attr("card-id", this.cardID = name)
         this.upright = upright;
         this.classList.add("card")
         this.src = `art/${name}.svg`;
-        [this.#faceValue, this.#numValue] = (v => {
+        let numValue, suitNum;
+        [this.#faceValue, numValue] = (v => {
             switch(v){
                 case "A":
                     return ["Ace", 1]
@@ -212,7 +449,7 @@ class Card extends Image {
                     return [v, +v]
             }
         })(ID[1]);
-        [this.#suitSymbol, this.#suitNum, this.#suitName] = (() => {
+        [this.#suitSymbol, suitNum, this.#suitName] = (() => {
             switch(ID[2]){
                 case "S":
                     return ["\u2664", 0, "Spades"];
@@ -224,6 +461,7 @@ class Card extends Image {
                     return ["\u2666", 3, "Diamonds"]
             }
         })()
+        this.numID ??= numValue + 13*suitNum;
         this.onmouseover = function(e){
             e.preventDefault()
             $(this).addClass("hover")
@@ -366,14 +604,6 @@ class Card extends Image {
         return $(this).attr("pile")
     }
 
-    get cardID(){
-        return this.#cardID
-    }
-
-    get numID(){
-        return this.#numValue + 13*this.#suitNum
-    }
-
     toString(){
         return `[Card: ${(this.#faceValue[0] || this.#faceValue) + this.#suitSymbol}]`
     }
@@ -404,12 +634,14 @@ $(playTable)
     //.prepend('<img width="95" height="133" class="card-helper" />')
 
 $(function(){
-    $(playTable).append([new Card("KH"), new Card("QH"), new Card("JH")])
-    $(playTable).append(new Pile([new Card("KS"), new Card("QS"), new Card("JS"), new Card("10S")]))
+    $(playTable).append(new CardArray(50, 11, 46, 41, 18, 1, 13, 17, 36, 31, 27, 20))
     $(".play-area").prepend(playTable)
-    $(".hand").mouseenter(function(e){
-        console.log($(".card:active").appendTo(".hand"))
+    /*$(".hand").mouseenter(function(e){
+        $(".card:active").appendTo(".hand")
     })
+    .mouseout(function(e){
+        $(".card:active").appendTo(playTable)
+    })*/
 })
 
 
