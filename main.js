@@ -48,6 +48,7 @@ function checkOptions(table, hand){
     for(let i in hand){
         let cardArray = table.concat(hand[i]),
             buildOptions = [],
+            buildTempArray = [],
             handAfterPlay = [...hand]; handAfterPlay.splice(i, 1)
         /*
          * Added every card as a "pickup" option
@@ -57,7 +58,7 @@ function checkOptions(table, hand){
             if(typeof cardArray[i] == "object"){
                 buildOptions.push({building: cardArray[i][0] - 100, cards: cardArray[i].slice(1)})
                 cardArray.splice(i--, 1)
-                continue;
+                continue
             }
             buildOptions.push({pickUp: cardArray[i]%13, card: cardArray[i]})
             if(cardArray[i]%13 > 10 || cardArray[i]%13 === 0){
@@ -145,40 +146,48 @@ function checkOptions(table, hand){
                                             building: cardArray[i]%13 + cardArray[j]%13 + cardArray[k]%13 + cardArray[l]%13 + cardArray[m]%13 + cardArray[n]%13 + cardArray[o]%13,
                                             cards: [cardArray[i], cardArray[j], cardArray[k], cardArray[l], cardArray[m], cardArray[n], cardArray[o]]
                                         });
+
+        for(let b of buildOptions){
+            let index = b.building ?? b.pickUp,
+                value = b.cards ?? [b.card];
+            /*
+            if(buildTempArray[index]){
+                buildTempArray[index].push(value)
+            } else {
+                buildTempArray[index] = [value]
+            }
+            */
+            buildTempArray[index]?.push(value) ?? (buildTempArray[index] = [value])
+        }
+        for(let i in buildTempArray){
+            if(buildTempArray[i].length > 1){
+                buildOptions.push({building: i, ways: buildTempArray[i]})
+            }
+        }
     
-        for(let j in handAfterPlay){
-            for(let b of buildOptions){
+        /*
+         * All the options have been discovered
+         * Now it's time to assess the cards in hand
+         */
+
+        for(let b of buildOptions){
+            if(b.building === hand[i]%13 && !b.cards.includes(hand[i])){
+                playOptions.push({collect: b.cards, with: hand[i]})
+            }
+            for(let j in handAfterPlay){
                 if(b.pickUp === handAfterPlay[j]%13 && b.card != hand[i]){
                     playOptions.push({collect: [b.card], with: handAfterPlay[j]})
                     continue
                 }
                 if(b.cards?.includes(hand[i]) && handAfterPlay.some(card => card%13 === b.building)){
                     playOptions.push({build: b.building, with: b.cards})
-                    continue
                 }
                 if(b.building === handAfterPlay[j]%13){
                     playOptions.push({collect: b.cards, with: handAfterPlay[j]})
-                    continue
                 }
             }
         }
     }
-
-    /*
-     * All the options have been discovered
-     * Now it's time to assess the cards in hand
-     */
-
-    /*for(let b of buildOptions){
-        for(let h in hand){
-            if(b.pickUp){
-                if(b.pickUp === h){
-                    playOptions.push({take: b.card, with: h})
-                }
-                continue;
-            }
-        }
-    }*/
     return playOptions
 }
 
@@ -265,10 +274,7 @@ class CardArray extends Array {
     }
 
     toStringArray(){
-        let arr = [];
-        for(let e of this)
-            arr.push(e+"");
-        return arr
+        return this.map(e => e+"")
     }
 
     push(){
@@ -285,7 +291,7 @@ class CardArray extends Array {
     shuffle(){
         // Fisher–Yates shuffle
         for (let i = this.length - 1; i > 0; i--){
-            let j = Math.random()*52|0;
+            let j = Math.random()*this.length|0;
             [this[i], this[j]] = [this[j], this[i]];
         }
         /*
