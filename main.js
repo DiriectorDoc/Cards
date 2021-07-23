@@ -234,7 +234,7 @@ class ContextMenu {
 class CardArray extends Array {
 
     constructor(){
-        super(CardArray.arrayToCardArray(arguments))
+        super(...CardArray.arrayToCardArray(arguments))
     }
 
     toPile(){
@@ -278,7 +278,7 @@ class CardArray extends Array {
     }
 
     push(){
-        super.push(CardArray.arrayToCardArray(arguments))
+        super.push(...CardArray.arrayToCardArray(arguments))
     }
 
     remove(card){
@@ -310,7 +310,7 @@ class CardArray extends Array {
 
     static arrayToCardArray(array){
         try {
-            return [...(arguments.length > 1 ? arguments:array)].map(e => new Card(e))
+            return [...(arguments.length > 1 ? arguments:array)].map(e => e instanceof Card ? e:new Card(e))
         } catch(err){
             if(err instanceof SpecificError){
                 throw new SpecificError("Illegal parameters")
@@ -353,7 +353,7 @@ class Pile extends CardArray {
             }
             this.push(card)
             if(this.length == 1){
-                playTable.storedPiles[this.basePileID = card.cardID] = this;
+                playTable.storedPiles[this.basePileID = card.cardID] = this
             }
             card.basePile = this.basePileID
         } else {
