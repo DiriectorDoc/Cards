@@ -543,7 +543,7 @@ class Card extends Image {
                 } else {
                     $self.css({
                         left: self.offsetLeft - oldX + e.clientX,
-                        top: self.offsetTop - oldY + e.clientY
+                        top: Math.min(self.offsetTop - oldY + e.clientY, document.body.offsetHeight - 160 - self.upright*3.5)
                     })
                     if(hoverCards.length > 1){
                         hoverCards.addClass("hover")
