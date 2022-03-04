@@ -452,6 +452,9 @@ class Card extends Image {
         }
         this.oncontextmenu = function(e){
             e.preventDefault()
+            let cards = [...$(".highlighted")];
+            console.log(cards.map(e => e.numID))
+            console.log(checkOptions([cards[0].numID], cards.slice(1).map(e => e.numID)))
             playTable.contextMenu?.close()
             playTable.contextMenu = new ContextMenu({
                 header: this.#faceValue + " of " + this.#suitName,
