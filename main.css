@@ -54,85 +54,166 @@ body {
   height: 100vh;
   top: 0;
   position: absolute;
-  pointer-events: none;
-}
-.overlay * {
-  pointer-events: auto;
 }
 
 .card {
-  position: -webkit-sticky;
-  position: sticky;
-  cursor: move;
-  cursor: -webkit-grab;
-  cursor: -moz-grab;
-  cursor: grab;
-  margin: -133px 0 0 -80px;
-  outline: none;
-  transition: height 125ms, width 125ms;
-  /* Remember this colour: #ED68A0 */
+  background-size: 100%;
 }
-.card:first-of-type {
-  margin: 0;
+.card[value=ace][suit=spades] {
+  background-image: url(art/AS.svg);
 }
-.card.hover {
-  z-index: 100;
-  box-shadow: 2px 2px 7px #7EDDF0, -2px -2px 7px #7EDDF0, -2px 2px 7px #7EDDF0, 2px -2px 7px #7EDDF0;
+.card[value=ace][suit=hearts] {
+  background-image: url(art/AH.svg);
 }
-.card.highlighted {
-  z-index: 100;
-  box-shadow: 2px 2px 7px #EDE380, -2px -2px 7px #EDE380, -2px 2px 7px #EDE380, 2px -2px 7px #EDE380;
+.card[value=ace][suit=clubs] {
+  background-image: url(art/AC.svg);
 }
-.card:active {
-  cursor: -webkit-grabbing;
-  cursor: -moz-grabbing;
-  cursor: grabbing;
-  z-index: 100;
+.card[value=ace][suit=diamonds] {
+  background-image: url(art/AD.svg);
 }
-.card.in-hand {
-  z-index: 300;
+.card[value="2"][suit=spades] {
+  background-image: url(art/2S.svg);
 }
-
-.card-helper {
-  margin: -21px 0 0 0;
+.card[value="2"][suit=hearts] {
+  background-image: url(art/2H.svg);
 }
-
-.context-menu {
-  position: -webkit-sticky;
-  position: sticky;
-  width: -webkit-fit-content;
-  width: -moz-fit-content;
-  width: fit-content;
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
-  font-family: Arial, Helvetica, sans-serif;
-  border-radius: 3px 1em 1em 1em;
-  padding: 0.5em 0;
-  overflow: hidden;
-  z-index: 200;
+.card[value="2"][suit=clubs] {
+  background-image: url(art/2C.svg);
 }
-.context-menu hr {
-  border: 0;
-  border-top: 1px solid white;
+.card[value="2"][suit=diamonds] {
+  background-image: url(art/2D.svg);
 }
-.context-menu .context-menu-header {
-  padding: 0 0.5em;
-  font-weight: bold;
-  text-align: center;
+.card[value="3"][suit=spades] {
+  background-image: url(art/3S.svg);
 }
-.context-menu .context-menu-options .option {
-  padding: 0 0.5em;
-  cursor: pointer;
+.card[value="3"][suit=hearts] {
+  background-image: url(art/3H.svg);
 }
-.context-menu .context-menu-options .option:hover {
-  background: rgba(255, 255, 255, 0.3);
+.card[value="3"][suit=clubs] {
+  background-image: url(art/3C.svg);
 }
-.context-menu .context-menu-options .option:nth-child(2n) {
-  border: dotted white;
-  border-width: 0.5px 0;
+.card[value="3"][suit=diamonds] {
+  background-image: url(art/3D.svg);
 }
-.context-menu .context-menu-options .option:last-child {
-  border-width: 0.5px 0 0 0;
+.card[value="4"][suit=spades] {
+  background-image: url(art/4S.svg);
+}
+.card[value="4"][suit=hearts] {
+  background-image: url(art/4H.svg);
+}
+.card[value="4"][suit=clubs] {
+  background-image: url(art/4C.svg);
+}
+.card[value="4"][suit=diamonds] {
+  background-image: url(art/4D.svg);
+}
+.card[value="5"][suit=spades] {
+  background-image: url(art/5S.svg);
+}
+.card[value="5"][suit=hearts] {
+  background-image: url(art/5H.svg);
+}
+.card[value="5"][suit=clubs] {
+  background-image: url(art/5C.svg);
+}
+.card[value="5"][suit=diamonds] {
+  background-image: url(art/5D.svg);
+}
+.card[value="6"][suit=spades] {
+  background-image: url(art/6S.svg);
+}
+.card[value="6"][suit=hearts] {
+  background-image: url(art/6H.svg);
+}
+.card[value="6"][suit=clubs] {
+  background-image: url(art/6C.svg);
+}
+.card[value="6"][suit=diamonds] {
+  background-image: url(art/6D.svg);
+}
+.card[value="7"][suit=spades] {
+  background-image: url(art/7S.svg);
+}
+.card[value="7"][suit=hearts] {
+  background-image: url(art/7H.svg);
+}
+.card[value="7"][suit=clubs] {
+  background-image: url(art/7C.svg);
+}
+.card[value="7"][suit=diamonds] {
+  background-image: url(art/7D.svg);
+}
+.card[value="8"][suit=spades] {
+  background-image: url(art/8S.svg);
+}
+.card[value="8"][suit=hearts] {
+  background-image: url(art/8H.svg);
+}
+.card[value="8"][suit=clubs] {
+  background-image: url(art/8C.svg);
+}
+.card[value="8"][suit=diamonds] {
+  background-image: url(art/8D.svg);
+}
+.card[value="9"][suit=spades] {
+  background-image: url(art/9S.svg);
+}
+.card[value="9"][suit=hearts] {
+  background-image: url(art/9H.svg);
+}
+.card[value="9"][suit=clubs] {
+  background-image: url(art/9C.svg);
+}
+.card[value="9"][suit=diamonds] {
+  background-image: url(art/9D.svg);
+}
+.card[value="10"][suit=spades] {
+  background-image: url(art/10S.svg);
+}
+.card[value="10"][suit=hearts] {
+  background-image: url(art/10H.svg);
+}
+.card[value="10"][suit=clubs] {
+  background-image: url(art/10C.svg);
+}
+.card[value="10"][suit=diamonds] {
+  background-image: url(art/10D.svg);
+}
+.card[value=jack][suit=spades] {
+  background-image: url(art/JS.svg);
+}
+.card[value=jack][suit=hearts] {
+  background-image: url(art/JH.svg);
+}
+.card[value=jack][suit=clubs] {
+  background-image: url(art/JC.svg);
+}
+.card[value=jack][suit=diamonds] {
+  background-image: url(art/JD.svg);
+}
+.card[value=queen][suit=spades] {
+  background-image: url(art/QS.svg);
+}
+.card[value=queen][suit=hearts] {
+  background-image: url(art/QH.svg);
+}
+.card[value=queen][suit=clubs] {
+  background-image: url(art/QC.svg);
+}
+.card[value=queen][suit=diamonds] {
+  background-image: url(art/QD.svg);
+}
+.card[value=king][suit=spades] {
+  background-image: url(art/KS.svg);
+}
+.card[value=king][suit=hearts] {
+  background-image: url(art/KH.svg);
+}
+.card[value=king][suit=clubs] {
+  background-image: url(art/KC.svg);
+}
+.card[value=king][suit=diamonds] {
+  background-image: url(art/KD.svg);
 }
 
 /*# sourceMappingURL=main.css.map */

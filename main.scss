@@ -1,152 +1,247 @@
 body {
-    margin: 0;
+	margin: 0;
 }
 
 * {
-    user-select: none;
+	user-select: none;
 }
 
 .hand {
-    position: absolute;
-    bottom: 0;
-    background: #444;
-    height: 160px;
-    width: 100%;
-    z-index: 100;
+	position: absolute;
+	bottom: 0;
+	background: #444;
+	height: 160px;
+	width: 100%;
+	z-index: 100;
 
-    &:after {
-        content: "";
-        width: calc(100% - 32px);
-        height: calc(100% - 32px);
-        display: block;
-        box-sizing: border-box;
-        border: 5px solid #222;
-        position: relative;
-        top: 16px;
-        left: 16px;
-    }
+	&:after {
+		content: "";
+		width: calc(100% - 32px);
+		height: calc(100% - 32px);
+		display: block;
+		box-sizing: border-box;
+		border: 5px solid #222;
+		position: relative;
+		top: 16px;
+		left: 16px;
+	}
 
-    &:before {
-        content: "";
-        display: block;
-        position: relative;
-        width: 100%;
-        height: 16px;
-        top: -16px;
-        margin-bottom: -16px;
-        background: #444;
-        background: linear-gradient(0deg, #444 0%, rgba(68,68,68,0) 100%);
-    }
+	&:before {
+		content: "";
+		display: block;
+		position: relative;
+		width: 100%;
+		height: 16px;
+		top: -16px;
+		margin-bottom: -16px;
+		background: #444;
+		background: linear-gradient(0deg, #444 0%, rgba(68,68,68,0) 100%);
+	}
 }
 
 .play-area {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
+	position: relative;
+	width: 100vw;
+	height: 100vh;
 }
 
 .play-table {
-    height: 100%;
-    width: 100%;
-    background: #056941 url(img/tablecloth.png) repeat;
+	height: 100%;
+	width: 100%;
+	background: #056941 url(img/tablecloth.png) repeat;
 }
 
 .overlay {
-    width: 100vw;
-    height: 100vh;
-    top: 0;
-    position: absolute;
-    pointer-events: none;
-
-    * {
-        pointer-events: auto;
-    }
+	width: 100vw;
+	height: 100vh;
+	top: 0;
+	position: absolute;
 }
 
 .card {
-    position: -webkit-sticky;
-    position: sticky;
-    cursor: move;
-    cursor: -webkit-grab;
-    cursor: -moz-grab;
-    cursor: grab;
-    margin: -133px 0 0 -80px;
-    outline: none;
-    transition: height 125ms, width 125ms;
 
-    &:first-of-type {
-        margin: 0;
-    }
+	background-size: 100%;
 
-    &.hover {
-        z-index: 100;
-        box-shadow: 2px 2px 7px #7EDDF0, -2px -2px 7px #7EDDF0, -2px 2px 7px #7EDDF0, 2px -2px 7px #7EDDF0;
-    }
-
-    &.highlighted {
-        z-index: 100;
-        box-shadow: 2px 2px 7px #EDE380, -2px -2px 7px #EDE380, -2px 2px 7px #EDE380, 2px -2px 7px #EDE380;
-    }
-
-    /* Remember this colour: #ED68A0 */
-
-    &:active {
-        cursor: -webkit-grabbing;
-        cursor: -moz-grabbing;
-        cursor: grabbing;
-        z-index: 100;
-    }
-
-    &.in-hand {
-        z-index: 300;
-    }
-}
-.card-helper {
-    margin: -21px 0 0 0;
-}
-
-.context-menu {
-    position: -webkit-sticky;
-    position: sticky;
-    width: -webkit-fit-content;
-    width: -moz-fit-content;
-    width: fit-content;
-    background: rgba(0, 0, 0, .75);
-    color: white;
-    font-family: Arial, Helvetica, sans-serif;
-    border-radius: 3px 1em 1em 1em;
-    padding: .5em 0;
-    overflow: hidden;
-    z-index: 200;
-
-    hr {
-        border: 0;
-        border-top: 1px solid white;
-    }
-
-    .context-menu-header {
-        padding: 0 .5em;
-        font-weight: bold;
-        text-align: center;
-    }
-
-    .context-menu-options {
-        .option {
-            padding: 0 .5em;
-            cursor: pointer;
-
-            &:hover {
-                background: rgba(255, 255, 255, .3);
-            }
-
-            &:nth-child(2n) {
-                border: dotted white;
-                border-width: .5px 0;
-            }
-
-            &:last-child {
-                border-width: .5px 0 0 0;
-            }
-        }
-    }
+	&[value="ace"] {
+		&[suit="spades"] {
+			background-image: url(art/AS.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/AH.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/AC.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/AD.svg);
+		}
+	}
+	&[value="2"] {
+		&[suit="spades"] {
+			background-image: url(art/2S.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/2H.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/2C.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/2D.svg);
+		}
+	}
+	&[value="3"] {
+		&[suit="spades"] {
+			background-image: url(art/3S.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/3H.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/3C.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/3D.svg);
+		}
+	}
+	&[value="4"] {
+		&[suit="spades"] {
+			background-image: url(art/4S.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/4H.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/4C.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/4D.svg);
+		}
+	}
+	&[value="5"] {
+		&[suit="spades"] {
+			background-image: url(art/5S.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/5H.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/5C.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/5D.svg);
+		}
+	}
+	&[value="6"] {
+		&[suit="spades"] {
+			background-image: url(art/6S.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/6H.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/6C.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/6D.svg);
+		}
+	}
+	&[value="7"] {
+		&[suit="spades"] {
+			background-image: url(art/7S.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/7H.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/7C.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/7D.svg);
+		}
+	}
+	&[value="8"] {
+		&[suit="spades"] {
+			background-image: url(art/8S.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/8H.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/8C.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/8D.svg);
+		}
+	}
+	&[value="9"] {
+		&[suit="spades"] {
+			background-image: url(art/9S.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/9H.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/9C.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/9D.svg);
+		}
+	}
+	&[value="10"] {
+		&[suit="spades"] {
+			background-image: url(art/10S.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/10H.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/10C.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/10D.svg);
+		}
+	}
+	&[value="jack"] {
+		&[suit="spades"] {
+			background-image: url(art/JS.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/JH.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/JC.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/JD.svg);
+		}
+	}
+	&[value="queen"] {
+		&[suit="spades"] {
+			background-image: url(art/QS.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/QH.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/QC.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/QD.svg);
+		}
+	}
+	&[value="king"] {
+		&[suit="spades"] {
+			background-image: url(art/KS.svg);
+		}
+		&[suit="hearts"] {
+			background-image: url(art/KH.svg);
+		}
+		&[suit="clubs"] {
+			background-image: url(art/KC.svg);
+		}
+		&[suit="diamonds"] {
+			background-image: url(art/KD.svg);
+		}
+	}
 }
