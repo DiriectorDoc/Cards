@@ -6,7 +6,7 @@ body {
 	user-select: none;
 }
 
-.hand {
+#hand {
 	position: absolute;
 	bottom: 0;
 	background: #444;
@@ -39,19 +39,19 @@ body {
 	}
 }
 
-.play-area {
+#play-area {
 	position: relative;
 	width: 100vw;
 	height: 100vh;
 }
 
-.play-table {
+#play-table {
 	height: 100%;
 	width: 100%;
 	background: #056941 url(img/tablecloth.png) repeat;
 }
 
-.overlay {
+#overlay {
 	width: 100vw;
 	height: 100vh;
 	top: 0;

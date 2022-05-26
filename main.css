@@ -6,7 +6,7 @@ body {
   user-select: none;
 }
 
-.hand {
+#hand {
   position: absolute;
   bottom: 0;
   background: #444;
@@ -14,7 +14,7 @@ body {
   width: 100%;
   z-index: 100;
 }
-.hand:after {
+#hand:after {
   content: "";
   width: calc(100% - 32px);
   height: calc(100% - 32px);
@@ -25,7 +25,7 @@ body {
   top: 16px;
   left: 16px;
 }
-.hand:before {
+#hand:before {
   content: "";
   display: block;
   position: relative;
@@ -37,19 +37,19 @@ body {
   background: linear-gradient(0deg, #444 0%, rgba(68, 68, 68, 0) 100%);
 }
 
-.play-area {
+#play-area {
   position: relative;
   width: 100vw;
   height: 100vh;
 }
 
-.play-table {
+#play-table {
   height: 100%;
   width: 100%;
   background: #056941 url(img/tablecloth.png) repeat;
 }
 
-.overlay {
+#overlay {
   width: 100vw;
   height: 100vh;
   top: 0;
