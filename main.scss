@@ -12,7 +12,6 @@ body {
 	background: #444;
 	height: 160px;
 	width: 100%;
-	z-index: 100;
 
 	&:after {
 		content: "";
@@ -45,10 +44,11 @@ body {
 	height: 100vh;
 }
 
-#play-table {
+#table {
+	background: #056941 url(img/tablecloth.png) repeat;
 	height: 100%;
 	width: 100%;
-	background: #056941 url(img/tablecloth.png) repeat;
+	position: fixed;
 }
 
 #overlay {
@@ -61,6 +61,18 @@ body {
 .card {
 
 	background-size: 100%;
+    cursor: move;
+    cursor: -webkit-grab;
+    cursor: -moz-grab;
+    cursor: grab;
+	position: absolute;
+
+	&:active {
+        cursor: -webkit-grabbing;
+        cursor: -moz-grabbing;
+        cursor: grabbing;
+        z-index: 100;
+    }
 
 	&[value="ace"] {
 		&[suit="spades"] {
