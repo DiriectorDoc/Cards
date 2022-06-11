@@ -63,6 +63,10 @@ body {
   cursor: -moz-grab;
   cursor: grab;
   position: absolute;
+  transition: width 300ms, height 300ms;
+}
+.card.glide {
+  transition: all 300ms;
 }
 .card:active {
   cursor: -webkit-grabbing;
