@@ -2,7 +2,7 @@
 function $(selector) {
     return document.querySelector(selector);
 }
-const TABLE = jsx `<div id="table">`, HAND = jsx `<div id="hand">`, OVERLAY = jsx `<div id="overlay">`, PLAY_AREA = jsx `<div id="play-area">${TABLE}${HAND}${OVERLAY}</div>`, ACE = "ace", JACK = "jack", QUEEN = "queen", KING = "king", SPADES = "spades", HEARTS = "hearts", CLUBS = "clubs", DIAMONDS = "diamonds";
+const HAND = jsx `<div id="hand">`, TABLE = jsx `<div id="table">${HAND}</div>`, CARDS = jsx `<div id="cards">`, OVERLAY = jsx `<div id="overlay">`, DISPLAYS = jsx `<div id="displays">${CARDS}${OVERLAY}</div>`, PLAY_AREA = jsx `<div id="play-area">${TABLE}${DISPLAYS}</div>`, ACE = "ace", JACK = "jack", QUEEN = "queen", KING = "king", SPADES = "spades", HEARTS = "hearts", CLUBS = "clubs", DIAMONDS = "diamonds";
 class Card {
     constructor(val, suit) {
         this._value = val;
@@ -11,14 +11,14 @@ class Card {
         this.scale = 1;
         let onmousemove = (e) => {
             e.preventDefault();
-            this.x = e.x;
-            this.y = e.y;
+            this.x = Math.max(0, Math.min(e.x - this.width / 2, CARDS.clientWidth - this.width));
+            this.y = Math.max(0, Math.min(e.y - this.height / 2, CARDS.clientHeight - this.height));
         }, onmouseup = (e) => {
             e.preventDefault();
             document.removeEventListener("mousemove", onmousemove);
             document.removeEventListener("mouseup", onmouseup);
-            this.x = e.x;
-            this.y = e.y;
+            this.x = `${Math.max(0, Math.min((CARDS.clientWidth - this.width) / CARDS.clientWidth, (e.x - this.width / 2) / CARDS.clientWidth) * 100)}%`;
+            this.y = `${Math.max(0, Math.min((CARDS.clientHeight - this.height) / CARDS.clientHeight, (e.y - this.height / 2) / CARDS.clientHeight) * 100)}%`;
             if (this.y > TABLE.clientHeight - 160) {
                 this.element.classList.add("glide");
                 this.scale = 1.5;
@@ -32,8 +32,6 @@ class Card {
         };
         this.element.addEventListener("mousedown", (e) => {
             e.preventDefault();
-            this.x = e.x;
-            this.y = e.y;
             document.addEventListener("mousemove", onmousemove);
             document.addEventListener("mouseup", onmouseup);
         });
@@ -43,23 +41,21 @@ class Card {
         if (this._scale !== val) {
             this._scale = val;
             let newWidth = val * 80, newHeight = val * 112;
-            this.element.style.left = `${Math.max(0, Math.min((OVERLAY.clientWidth - newWidth) / OVERLAY.clientWidth, (this.x - newWidth / 2) / OVERLAY.clientWidth) * 100)}%`;
-            this.element.style.top = `${Math.max(0, Math.min((OVERLAY.clientHeight - newHeight) / OVERLAY.clientHeight, (this.y - newHeight / 2) / OVERLAY.clientHeight) * 100)}%`;
-            this.element.style.width = `${this.width = newWidth}px`;
-            this.element.style.height = `${this.height = newHeight}px`;
+            this.x = `${Math.max(0, Math.min((CARDS.clientWidth - newWidth) / CARDS.clientWidth, (this.x - newWidth / 2) / CARDS.clientWidth) * 100)}%`;
+            this.y = `${Math.max(0, Math.min((CARDS.clientHeight - newHeight) / CARDS.clientHeight, (this.y - newHeight / 2) / CARDS.clientHeight) * 100)}%`;
         }
     }
     get scale() {
         return this._scale;
     }
     set x(px) {
-        this.element.style.left = `${Math.max(0, Math.min((OVERLAY.clientWidth - this.width) / OVERLAY.clientWidth, (px - this.width / 2) / OVERLAY.clientWidth) * 100)}%`;
+        this.element.style.left = typeof px === "number" ? `${px}px` : px;
     }
     get x() {
         return this.element.offsetLeft + this.element.clientWidth / 2;
     }
     set y(px) {
-        this.element.style.top = `${Math.max(0, Math.min((OVERLAY.clientHeight - this.height) / OVERLAY.clientHeight, (px - this.height / 2) / OVERLAY.clientHeight) * 100)}%`;
+        this.element.style.top = typeof px === "number" ? `${px}px` : px;
     }
     get y() {
         return this.element.offsetTop + this.element.clientHeight / 2;
@@ -92,5 +88,6 @@ class Card {
 const c = new Card(ACE, SPADES);
 window.onload = () => {
     document.body.append(PLAY_AREA);
-    OVERLAY.append(c.element);
+    CARDS.append(c.element);
+    //CARDS.append(new Card(2, SPADES).element)
 };

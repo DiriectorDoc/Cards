@@ -128,6 +128,5 @@ const c = new Card(ACE, SPADES);
 window.onload = () => {
 	document.body.append(PLAY_AREA)
 	CARDS.append(c.element)
-	OVERLAY.append(c.overlay.element)
 	//CARDS.append(new Card(2, SPADES).element)
 }
