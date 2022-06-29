@@ -4,6 +4,7 @@ body {
 
 * {
   user-select: none;
+  overflow: hidden;
 }
 
 #hand {
@@ -12,6 +13,7 @@ body {
   background: #444;
   height: 160px;
   width: 100%;
+  overflow: visible;
 }
 #hand:after {
   content: "";
@@ -49,12 +51,26 @@ body {
   position: fixed;
 }
 
-#overlay {
+#displays {
   width: 100vw;
   height: 100vh;
   top: 0;
   position: absolute;
 }
+#displays > * {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  position: absolute;
+}
+
+#overlay {
+  pointer-events: none;
+}
+#overlay > * {
+  pointer-events: initial;
+}
+
 
 .card {
   background-size: 100%;
@@ -64,6 +80,7 @@ body {
   cursor: grab;
   position: absolute;
   transition: width 300ms, height 300ms;
+  z-index: 1;
 }
 .card.glide {
   transition: all 300ms;
@@ -72,7 +89,7 @@ body {
   cursor: -webkit-grabbing;
   cursor: -moz-grabbing;
   cursor: grabbing;
-  z-index: 100;
+  z-index: 2;
 }
 .card[value=ace][suit=spades] {
   background-image: url(art/AS.svg);
