@@ -1,8 +1,6 @@
 declare function jsx(str: TemplateStringsArray, ...values:any[]): HTMLElement;
 
-function $(selector: string){
-	return document.querySelector(selector)
-}
+const $ = document.querySelector.bind(document);
 
 const
 	HAND = jsx`<div id="hand">`,
@@ -24,21 +22,186 @@ const
 	CLUBS = "clubs",
 	DIAMONDS = "diamonds";
 
-type Value = "ace"|2|3|4|5|6|7|8|9|10|"jack"|"queen"|"king";
+type NumberValue =  "ace"|2|3|4|5|6|7|8|9|10;
+type FaceValue = "jack"|"queen"|"king";
+type Value = NumberValue|FaceValue;
+
 type Suit = "spades"|"hearts"|"clubs"|"diamonds";
+
+interface WeakCard {
+	value: Value,
+	suit: Suit
+}
 
 class Card {
 
-	private _value: Value;
-	private _suit: Suit;
+	readonly value: Value;
+	readonly suit: Suit;
+
+	constructor({ value, suit }: WeakCard){
+		this.value = value;
+		this.suit = suit;
+	}
+
+	seq({value, suit}: Card): boolean;
+	seq({value, suit}: WeakCard): boolean {
+		return this.value == value && this.suit == suit;
+	}
+
+	eq({value}: Card): boolean;
+	eq({value}: {value: Value}): boolean {
+		return this.value == value
+	}
+
+	lt({value}: Card): boolean;
+	lt({value}: {value: Value}): boolean {
+		return typeof this.value == typeof value ? this.value != KING && this.value < value : value != ACE && this.value == ACE
+	}
+
+	gt({value}: Card): boolean;
+	gt({value}: {value: Value}): boolean {
+		return typeof this.value == typeof value ? this.value != ACE && this.value > value : value != KING && this.value == KING
+	}
+}
+
+class Group {
+	cards: Card[] = [];
+
+	moveCardToGroup(c: Card, p: Group): void {
+		p.add(this.remove(c))
+	}
+
+	remove(c: Card): Card {
+		return this.cards.splice(this.findIndex(c), 1)[0]
+	}
+
+	add(c: Card | Group): void {
+		if(c instanceof Group){
+			this.cards.push(...c.cards)
+		} else {
+			this.cards.push(c)
+		}
+	}
+
+	findIndex(c: Card): number {
+		return this.cards.findIndex(e => e.seq(c))
+	}
+
+	contains(c: Card): boolean {
+		return this.findIndex(c) > -1
+	}
+
+	shuffle(): void {
+		let i = this.cards.length, j;
+		if(i == 0) return;
+		while(--i){
+			j = Math.floor(Math.random() * (i + 1));
+			[this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]]
+		}
+	}
+
+	static from(arr: Card[]): Group {
+		const p = new Group;
+		p.cards = arr;
+		return p
+	}
+
+	/*duplicate(): Group {
+		return Group.from(this.cards.map(e => new Card(e)))
+	}
+
+	sort(): this {
+		this.cards.sort((a, b) => a.gt(b) ? 1 : a.lt(b) ? -1 : 0)
+		return this
+	}*/
+
+	*[Symbol.iterator](){
+		yield* this.cards
+	}
+}
+
+class Build extends Group {
+
+	private capture: NumberValue;
+
+	constructor(cards: Card[], capture: NumberValue){
+		super()
+		this.cards = cards;
+		this.capture = capture;
+	}
+
+	static validate(stack: Card[], capture: NumberValue): boolean {
+		if(stack.length == 1 || stack.some(({value: v}) => v == JACK || v == QUEEN || v == KING)) return false;
+		stack.sort((a, b) => a.lt(b) ? 1 : a.gt(b) ? -1 : 0)
+		if(capture == ACE)
+			return stack.every(({value}) => value == ACE);
+		let indicies = [0, 1];
+		while(stack.length > 0){
+			if(stack[0].value > capture || indicies[indicies.length - 1] >= stack.length){
+				return false
+			}
+			if(stack[0].value == capture){
+				stack.shift()
+				continue
+			}
+			let sum = indicies.map(i => +stack[i].value || 1).reduce((a, b) => a + b, 0);
+			if(sum > capture){
+				indicies[indicies.length - 1]++
+			} else if(sum < capture){
+				indicies.push(indicies[indicies.length - 1] + 1)
+			} else {
+				for(let i of indicies.reverse()){
+					stack.splice(i, 1)
+				}
+				indicies = [0, 1]
+			}
+		}
+		return true
+	}
+
+	changeTag(p: Player, c: Card, t: NumberValue){
+		if(Build.validate([c, ...this], t)){
+			p.hand.moveCardToGroup(c, this)
+		} else {
+			throw "Cannot do that"
+		}
+	}
+
+	mergeGroup(g: Group){
+		if(!g.cards.some(({value: v}) => v == JACK || v == QUEEN || v == KING) && (this.capture == "ace" && g.cards.every(({value}) => value == ACE)) || g.cards.map(({value}) => value as number).reduce((a,b) => a+b, 0)){
+			this.cards.push(...g.cards)
+		}
+	}
+}
+
+class Player {
+	hand = new Group;
+	pile = new Group;
+
+};
+
+enum MoveType {
+	BURN,
+	BUILD,
+	CAPTURE
+}
+class Move {
+
+	constructor(move: MoveType.BUILD, p: Player, c: Card, group1: Group, group2: Group);
+	constructor(move: MoveType.CAPTURE, p: Player, c: Card, group: Group);
+	constructor(move: MoveType.BURN, p: Player, c: Card);
+	constructor(move: MoveType, p: Player, c: Card, group1?: Group, group2?: Group){
+		
+	}
+}
+
+class CardElement {
 	private _scale!: number;
 
 	readonly element: HTMLElement
 
-	constructor(val: Value, suit: Suit){
-		this._value = val;
-		this._suit = suit;
-		this.element = jsx`<div class="card" value="${this._value}" suit="${this._suit}">`
+	constructor({value, suit}: Card){
+		this.element = jsx`<div class="card" value="${value}" suit="${suit}">`
 		this.scale = 1;
 
 		let onmousemove = (e: MouseEvent) => {
@@ -96,19 +259,6 @@ class Card {
 		return this.element.offsetTop + this.element.clientHeight/2
 	}
 
-	get value(): Value {
-		return this._value
-	}
-	set value(val: Value){
-		(this.element.attributes as any).value.value = this._value = val
-	}
-	get suit(): Suit {
-		return this._suit
-	}
-	set suit(suit: Suit){
-		(this.element.attributes as any).suit.value = this._suit = suit
-	}
-
 	get width(){
 		return this.element.clientWidth
 	}
@@ -123,10 +273,13 @@ class Card {
 	}
 }
 
-const c = new Card(ACE, SPADES);
+const DECK = (DECK => {
+	for(let s of [SPADES, HEARTS, CLUBS, DIAMONDS] as Suit[])
+		for(let f of [ACE, 2, 3, 4, 5, 6, 7, 8, 9, 10, JACK, QUEEN, KING] as Value[])
+			DECK.add(new Card({ value: f, suit: s }));
+	return DECK;
+})(new Group)
 
 window.onload = () => {
 	document.body.append(PLAY_AREA)
-	CARDS.append(c.element)
-	//CARDS.append(new Card(2, SPADES).element)
 }
